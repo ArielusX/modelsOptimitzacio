@@ -14,7 +14,7 @@ df = pd.read_csv(csv_file)
 # Target
 target_col = 'Completed'
 if df[target_col].dtype == 'object':
-    df[target_col] = df[target_col].map({'Completed':1, 'Not Completed':0})
+    df[target_col] = df[target_col].map({'Completed': 1, 'Not Completed': 0})
 
 # Seleccionar solo features numéricas
 X = df.drop(target_col, axis=1).select_dtypes(include=[np.number])
@@ -34,11 +34,16 @@ model = RandomForestClassifier(**rf_params)
 model.fit(X, y)
 elapsed = time.time() - start
 
-# Guardar resultado en /results
+# ---------------------------
+# Guardar resultado en /results (CORREGIDO)
+# ---------------------------
 results_dir = "/results"
 os.makedirs(results_dir, exist_ok=True)
 
+# Extraer SOLO el nombre del archivo (sin ruta)
 csv_basename = os.path.basename(csv_file).split('.')[0]
+
+# Construir path final correcto
 result_file = os.path.join(results_dir, f"result_{csv_basename}.txt")
 
 with open(result_file, "w") as f:
