@@ -8,8 +8,11 @@ import os
 # Argumento: CSV chunk
 csv_file = sys.argv[1]
 
+print(f"[NODE] Iniciando con chunk: {csv_file}")
+
 # Leer CSV
 df = pd.read_csv(csv_file)
+print(f"[NODE] Chunk cargado: {len(df)} muestras")
 
 # Target
 target_col = 'Completed'
@@ -19,6 +22,8 @@ if df[target_col].dtype == 'object':
 # Seleccionar solo features numéricas
 X = df.drop(target_col, axis=1).select_dtypes(include=[np.number])
 y = df[target_col]
+
+print(f"[NODE] Features: {X.shape[1]}, Muestras: {len(X)}")
 
 # Configuración Random Forest
 rf_params = {
@@ -43,15 +48,25 @@ os.makedirs(results_dir, exist_ok=True)
 csv_basename = os.path.basename(csv_file).split('.')[0]
 result_file = os.path.join(results_dir, f"result_{csv_basename}.txt")
 
+print(f"[NODE] Guardando resultado en: {result_file}")
+
 # Guardar solo el tiempo
-with open(result_file, "w") as f:
-    f.write(f"{elapsed}")
+try:
+    with open(result_file, "w") as f:
+        f.write(f"{elapsed}")
+    print(f"[NODE] Tiempo guardado correctamente")
+except Exception as e:
+    print(f"[NODE] ERROR al guardar tiempo: {e}")
 
 # Leer el dataset COMPLETO para hacer predicciones
-# (El archivo debe estar montado en /data)
-full_dataset_path = "/data/../curse.csv"  # Subir un nivel desde /data
+# CORRECCIÓN: Usar path absoluto correcto
+full_dataset_path = "/fulldata/curse.csv"  # Nuevo path
+print(f"[NODE] Buscando dataset completo en: {full_dataset_path}")
+
 if os.path.exists(full_dataset_path):
+    print(f"[NODE] Dataset completo encontrado, cargando...")
     df_full = pd.read_csv(full_dataset_path)
+    print(f"[NODE] Dataset completo cargado: {len(df_full)} muestras")
     
     # Aplicar el mismo preprocesamiento que en master
     df_full[target_col] = df_full[target_col].astype(str).str.strip().map({
@@ -72,12 +87,20 @@ if os.path.exists(full_dataset_path):
     
     X_full = df_full.drop(target_col, axis=1).select_dtypes(include=[np.number])
     
+    print(f"[NODE] Haciendo predicciones sobre {len(X_full)} muestras...")
+    
     # Hacer predicciones sobre el dataset completo
     predictions = model.predict(X_full)
     
     # Guardar las predicciones
     pred_file = os.path.join(results_dir, f"predictions_{csv_basename}.npy")
-    np.save(pred_file, predictions)
-    print(f"[NODE] Predicciones guardadas en {pred_file}")
+    try:
+        np.save(pred_file, predictions)
+        print(f"[NODE] Predicciones guardadas en {pred_file}")
+    except Exception as e:
+        print(f"[NODE] ERROR al guardar predicciones: {e}")
 else:
     print(f"[NODE] WARNING: No se encontró dataset completo en {full_dataset_path}")
+    print(f"[NODE] Contenido de /: {os.listdir('/')}")
+
+print("[NODE] Proceso finalizado")
